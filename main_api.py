@@ -5,15 +5,14 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any
 
-# إعداد التسجيل
+# إعدادات التسجيل
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# تعريف نموذج البيانات لطلب المستخدم
+# نموذج طلب المستخدم
 class VideoRequest(BaseModel):
     facebook_url: str
 
-# تهيئة التطبيق
 app = FastAPI(
     title="Facebook Video Downloader API",
     description="استخلاص رابط التنزيل المباشر من فيسبوك باستخدام yt-dlp.",
@@ -21,11 +20,11 @@ app = FastAPI(
 )
 
 def get_facebook_video_url(url: str) -> Dict[str, Any]:
-    """يستخرج معلومات التنزيل (الرابط المباشر) لفيديو فيسبوك."""
+    """يستخرج معلومات التنزيل (الرابط المباشر والمدة) لفيديو فيسبوك."""
     ydl_opts = {
         'format': 'best',
         'noplaylist': True,
-        'skip_download': True,  # الأهم: لا تقم بالتنزيل، فقط استخرج المعلومات
+        'skip_download': True,
         'logger': logger,
         'verbose': False, 
     }
@@ -40,6 +39,7 @@ def get_facebook_video_url(url: str) -> Dict[str, Any]:
                 return {
                     "success": True,
                     "title": info.get('title', 'Facebook Video'),
+                    "duration": info.get('duration', 0), # <--- المتغير الجديد
                     "direct_url": best_format.get('url'),
                 }
             else:
@@ -64,6 +64,7 @@ async def download_facebook_video(request: VideoRequest):
         return {
             "status": "success",
             "title": result["title"],
+            "duration": result["duration"], # <--- تمرير المتغير الجديد
             "direct_download_url": result["direct_url"]
         }
     else:
@@ -72,8 +73,3 @@ async def download_facebook_video(request: VideoRequest):
 @app.get("/")
 def read_root():
     return {"message": "خدمة تنزيل فيديوهات فيسبوك تعمل."}
-
-if __name__ == "__main__":
-    # تشغيل الخادم على 0.0.0.0 ليكون متاحاً للشبكة (ضروري للبيئات السحابية)
-    uvicorn.run("main_api:app", host="0.0.0.0", port=8000, reload=True)
-    
