@@ -1,7 +1,7 @@
-# Dockerfile - التكوين النهائي الموحد
+# Dockerfile - التكوين النهائي الموحد والثابت
 # ------------------------------------
 
-# 1. تحديد الصورة الأساسية (هذا هو السطر المفقود)
+# 1. تحديد الصورة الأساسية (لحل خطأ no build stage)
 FROM python:3.11-slim
 
 # 2. تثبيت ffmpeg (مهم جداً لـ yt-dlp وحل مشكلة الصوت فقط)
@@ -16,8 +16,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4. نسخ كود التشغيل
+# 4. نسخ كود التشغيل (main.py)
 COPY main.py .
 
-# 5. أمر بدء التشغيل (يضمن حل مشكلة $PORT)
-CMD gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:"$PORT"
+# 5. أمر بدء التشغيل (استخدام المنفذ الثابت 8000)
+CMD gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
