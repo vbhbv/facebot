@@ -22,7 +22,8 @@ app = FastAPI(
 def get_facebook_video_url(url: str) -> Dict[str, Any]:
     """يستخرج معلومات التنزيل (الرابط المباشر والمدة) لفيديو فيسبوك."""
     ydl_opts = {
-        'format': 'best',
+        # التعديل الحاسم: طلب أفضل صيغة فيديو وصوت مدمجة
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', 
         'noplaylist': True,
         'skip_download': True,
         'logger': logger,
@@ -33,13 +34,14 @@ def get_facebook_video_url(url: str) -> Dict[str, Any]:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             
+            # يُعتمد على الصيغة الأولى التي تم دمجها أو اختيارها
             best_format = info['formats'][0] if 'formats' in info and info['formats'] else None
             
             if best_format:
                 return {
                     "success": True,
                     "title": info.get('title', 'Facebook Video'),
-                    "duration": info.get('duration', 0), # <--- المتغير الجديد
+                    "duration": info.get('duration', 0), 
                     "direct_url": best_format.get('url'),
                 }
             else:
@@ -64,7 +66,7 @@ async def download_facebook_video(request: VideoRequest):
         return {
             "status": "success",
             "title": result["title"],
-            "duration": result["duration"], # <--- تمرير المتغير الجديد
+            "duration": result["duration"], 
             "direct_download_url": result["direct_url"]
         }
     else:
